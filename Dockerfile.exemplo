@@ -1,0 +1,40 @@
+# syntax=docker/dockerfile:1
+# Exemplo GENERICO. Integre as etapas de build da sua aplicacao no fim.
+# O objetivo e validar ANTES de copiar qualquer codigo para a imagem.
+
+# ETAPA 1 - Verificar modelos + contexto de build ja filtrado
+FROM alpine:3.22 AS security-check
+RUN apk add --no-cache bash git grep coreutils findutils
+
+# Montagem SOMENTE LEITURA do contexto filtrado por .dockerignore.
+# Nao ha COPY de arquivos do projeto para o stage de auditoria.
+# Se o script retornar 1 ou 2, o docker build e interrompido.
+RUN --mount=type=bind,source=.,target=/context \
+    bash /context/validar-modelos.sh \
+      --rules-dir /context \
+      --context /context \
+    && touch /security-approved
+
+# Para sua aplicacao, acrescente um ou mais caminhos obrigatorios:
+#   --require-path src/main.js
+#   --require-path package-lock.json
+# Isso acusa quando um arquivo necessario foi excluido do contexto.
+
+# ETAPA 2 - Aplicacao de exemplo: substitua pela sua stack/runtime
+FROM alpine:3.22 AS application
+WORKDIR /app
+
+# Dependencia EXPLICITA do stage de seguranca. O BuildKit nao podera pular
+# a verificacao ao construir o stage final.
+RUN --mount=type=bind,from=security-check,source=/security-approved,target=/security-approved \
+    test -f /security-approved
+
+# Adicione APENAS os arquivos necessarios para sua aplicacao.
+# Evite COPY . . sem revisao (copiaria todo o contexto permitido).
+# COPY src/ /app/src/
+# COPY package.json package-lock.json /app/
+# RUN ...  (instalacao/compilacao especifica da aplicacao)
+# CMD ...  (comando especifico da aplicacao)
+
+# CMD demonstrativo para tornar este esqueleto executavel; substitua.
+CMD ["sh"]

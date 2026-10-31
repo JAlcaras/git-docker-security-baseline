@@ -1,0 +1,183 @@
+# =============================================================================
+# .dockerignore | Git + Docker Security Baseline v4 (proposta para revisao)
+# Filtra o CONTEXTO de build. Nao inspeciona camadas da imagem final.
+# A ultima regra correspondente prevalece (sintaxe diferente do Git).
+# Raiz = raiz do contexto usado no comando docker build.
+# Se houver <Dockerfile>.dockerignore, ele tem precedencia sobre este arquivo.
+# =============================================================================
+
+# 1. Arquivos de ambiente e credenciais - BLOQUEIO POR PADRAO
+**/.env
+**/.env.*
+**/*.env
+**/*.env.*
+**/.envrc
+**/secrets.json
+**/*.secrets.json
+**/.secrets
+**/secrets.local
+**/local-secrets
+**/*.key
+**/*.pem
+**/*.pfx
+**/*.p12
+**/*.jks
+**/*.keystore
+**/*.ppk
+**/id_rsa*
+**/id_dsa*
+**/id_ecdsa*
+**/id_ed25519*
+**/credentials.json
+**/*credentials*.json
+**/service-account*.json
+**/service_account*.json
+**/serviceAccountKey*.json
+**/auth.json
+**/.ssh
+**/.aws
+**/.gcp
+**/.azure
+**/.kube
+**/.config/gcloud
+**/.netrc
+**/.s3cfg
+**/.git-credentials
+**/.npmrc
+**/.pypirc
+**/.dockercfg
+**/.docker/config.json
+**/*.tfstate
+**/*.tfstate.*
+**/*.tfvars
+**/*.tfvars.json
+**/*.tfplan
+**/*.tfplan.*
+**/.terraform
+
+# 2. Repositorio, desenvolvimento local e definicoes de deploy
+**/.git
+**/.github
+**/.gitlab
+**/.gitlab-ci.yml
+**/.gitattributes
+**/.gitignore
+**/.dockerignore
+**/Dockerfile*
+**/docker-compose*
+**/compose.yml
+**/compose.yaml
+**/compose.*.yml
+**/compose.*.yaml
+**/buildspec*.yml
+**/buildspec*.yaml
+
+# 3. Estado local de agentes/IA e configuracoes pessoais
+**/.claude
+**/CLAUDE.md
+**/CLAUDE.local.md
+**/AGENTS.md
+**/AGENT.md
+**/GEMINI.md
+**/.codex
+**/.cursor
+**/.cursorrules
+**/.cursorignore
+**/.copilotignore
+**/.windsurf
+**/.windsurfrules
+**/.gemini
+**/.kiro
+**/.aider*
+**/.continue
+**/.roo
+**/.clinerules
+**/.junie
+**/.serena
+**/.specify
+**/.mcp.json
+**/openspec
+**/.impeccable
+**/.orca
+**/.playwright-mcp
+**/.aiexclude
+
+# 4. Editores, sistema operacional, logs, dumps e backups
+**/.vscode
+**/.idea
+**/.vs
+**/.fleet
+**/.history
+**/.DS_Store
+**/Thumbs.db
+**/*.swp
+**/*.swo
+**/*~
+**/*.log
+**/*.tmp
+**/*.temp
+**/*.bak
+**/*.bkp
+**/*.old
+**/*.orig
+**/*.dump
+**/*.sql.gz
+**/*.sql.zip
+**/dump.rdb
+**/*.wpress
+# NAO excluir *.sql: migrations, schema e seeds podem ser necessarios.
+
+# 5. Resultados de teste, caches e dependencias locais
+**/coverage
+**/.nyc_output
+**/TestResults
+**/test-results
+**/playwright-report
+**/.pytest_cache
+**/__pycache__
+**/.mypy_cache
+**/.ruff_cache
+**/.phpunit.result.cache
+**/.phpunit.cache
+**/node_modules
+**/.pnpm-store
+**/.yarn/cache
+**/.venv
+**/venv
+**/*.pyc
+**/*.egg-info
+**/*.tsbuildinfo
+
+# 6. Opcionais por tecnologia - APENAS se forem recriados no Dockerfile
+# **/dist
+# **/out
+# **/.next
+# **/build
+# **/vendor
+# **/bin
+# **/obj
+# **/target
+# **/public/build
+# **/wp-content/cache
+# **/wp-content/upgrade
+# **/wp-content/ai1wm-backups
+# Nao excluir documentacao Markdown, LICENSE ou arquivos .sql por padrao.
+
+# 7. Excecoes aprovadas: NUNCA inserir segredos reais em templates
+!**/.env.example
+!**/.env.sample
+!**/.env.template
+!**/*.env.example
+!**/*.env.sample
+!**/*.env.template
+# Laravel: placeholders de pasta quando necessarios
+!**/storage/**/.gitignore
+
+# O Dockerfile.exemplo precisa ler os modelos da raiz no contexto filtrado.
+# Elas reabilitam APENAS os modelos da RAIZ do contexto, nao os aninhados.
+!/.gitignore
+!/.dockerignore
+# O validador nao e ignorado por este modelo. O exemplo o monta como
+# arquivo temporario e nao o copia para a imagem.
+# Excecao revisada para PEM publico (somente se necessario):
+# !certs/ca-publica.pem
