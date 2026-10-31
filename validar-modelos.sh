@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# validar-modelos.sh | Git + Docker Security Baseline v4 (revisao)
+# validar-modelos.sh | Git + Docker Security Baseline v1.0.0
 # Politica equilibrada: bloquear riscos criticos, avisar sobre ambiguidades.
 # Modo rules: testar regras Git e requisitos explicitos da baseline Docker.
 # Modo build: os mesmos testes + inspecao do contexto REAL ja filtrado.
@@ -15,6 +15,7 @@ Uso:
   bash validar-modelos.sh --context DIR [--rules-dir DIR] [--require-path ARQUIVO]...
 
   --check-rules        Testa as regras Git e a politica minima do .dockerignore.
+                       Modo padrao; nao pode ser combinado com --context.
   --context DIR        Tambem inspeciona os arquivos reais disponiveis em DIR.
                        Utilize o contexto filtrado montado durante docker build.
   --rules-dir DIR      Diretorio contendo .gitignore e .dockerignore.
@@ -34,15 +35,23 @@ HELP
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 RULES_DIR="$SCRIPT_DIR"
-MODE='rules'
+MODE=''
 CONTEXT=''
 REQUIRED_PATHS=()
 
+# Os modos sao exclusivos: aceitar ambos poderia desativar silenciosamente
+# a inspecao do contexto real (ex.: --context DIR --check-rules).
+mode_conflict() {
+  echo 'ERRO: --check-rules e --context sao mutuamente exclusivos.' >&2
+  exit 2
+}
+
 while (( $# > 0 )); do
   case "$1" in
-    --check-rules) MODE='rules'; shift ;;
+    --check-rules) [[ "$MODE" != build ]] || mode_conflict; MODE='rules'; shift ;;
     --context)
       (( $# >= 2 )) || { echo 'ERRO: --context exige diretorio.' >&2; exit 2; }
+      [[ "$MODE" != rules ]] || mode_conflict
       CONTEXT="$2"; MODE='build'; shift 2 ;;
     --rules-dir)
       (( $# >= 2 )) || { echo 'ERRO: --rules-dir exige diretorio.' >&2; exit 2; }
@@ -54,6 +63,7 @@ while (( $# > 0 )); do
     *) printf 'ERRO: argumento nao reconhecido: %q\n' "$1" >&2; usage >&2; exit 2 ;;
   esac
 done
+MODE="${MODE:-rules}"
 
 [[ -d "$RULES_DIR" ]] || { echo 'ERRO: --rules-dir nao existe.' >&2; exit 2; }
 RULES_DIR="$(cd -- "$RULES_DIR" && pwd -P)"
@@ -120,13 +130,16 @@ GIT_MUST_KEEP=(
   '.env.example' 'nested/.env.example' 'src/app.env.example'
   '.env.sample' 'src/app.env.template' 'AGENTS.md' 'CLAUDE.md'
   'src/main.js' 'tests/unit.test.js' 'docs/README.md'
-  'database/migrations/001.sql' 'app/bin/www' 'app/vendor/tool.php'
-  'app/dist/index.js' 'package-lock.json' 'composer.lock'
+  'database/migrations/001.sql' 'package-lock.json' 'composer.lock'
   'infra/.terraform.lock.hcl' '.vscode/extensions.json' 'LICENSE'
 )
+# Opcionais por stack (secao 8 do .gitignore): a baseline nao os ignora, mas
+# o projeto pode habilita-los. Divergencia gera aviso, nao bloqueio.
+GIT_OPTIONAL_KEEP=( 'app/bin/www' 'app/vendor/tool.php' 'app/dist/index.js' )
+GIT_OPT_DIFF=0
 
 check_git() {
-  local expected="$1" path="$2" found=0 rc=0
+  local expected="$1" path="$2" optional="${3:-0}" found=0 rc=0
   GIT_TOTAL=$((GIT_TOTAL + 1))
   if (
     unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_COMMON_DIR GIT_PREFIX
@@ -142,15 +155,23 @@ check_git() {
       *) block "Git: erro tecnico (${rc}) verificando caminho $(printf '%q' "$path")"; return ;;
     esac
   fi
-  if [[ "$expected" != "$found" ]]; then
-    block "Git: $(printf '%q' "$path") deveria ser ignorado=$expected, observado=$found"
-  else
+  if [[ "$expected" == "$found" ]]; then
     GIT_OK=$((GIT_OK + 1))
+  elif (( optional )); then
+    GIT_OPT_DIFF=$((GIT_OPT_DIFF + 1))
+    warn "Git: $(printf '%q' "$path") ignorado por opcional de stack (secao 8); confirme que o build recria esse diretorio"
+  else
+    block "Git: $(printf '%q' "$path") deveria ser ignorado=$expected, observado=$found"
   fi
 }
 for path in "${GIT_MUST_DROP[@]}"; do check_git 1 "$path"; done
 for path in "${GIT_MUST_KEEP[@]}"; do check_git 0 "$path"; done
-printf 'Git: %d/%d cenarios de regras aprovados.\n' "$GIT_OK" "$GIT_TOTAL"
+for path in "${GIT_OPTIONAL_KEEP[@]}"; do check_git 0 "$path" 1; done
+printf 'Git: %d/%d cenarios de regras aprovados' "$GIT_OK" "$GIT_TOTAL"
+if (( GIT_OPT_DIFF > 0 )); then
+  printf '; %d opcional(is) por stack habilitado(s) (aviso)' "$GIT_OPT_DIFF"
+fi
+printf '.\n'
 
 # 2. Docker: contrato MINIMO da baseline (verificacao estrutural, nao motor
 # Docker). Exige padroes canonicos; regras equivalentes editadas precisam

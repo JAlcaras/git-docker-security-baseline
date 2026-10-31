@@ -50,6 +50,8 @@ bash validar-modelos.sh --check-rules
 
 Verifica casos de exclusão e preservação com o **motor do Git** e a presença de proteções mínimas **canônicas** no `.dockerignore` (checagem estática). Essa etapa não analisa o contexto real e não reproduz o motor de padrões do Docker.
 
+Se o seu `.gitignore` habilitar os opcionais por stack `dist/`, `bin/` ou `vendor/`, o validador emite **aviso**, não bloqueio. A decisão é do projeto, desde que o build recrie esses diretórios.
+
 **B. Validar o contexto real DURANTE `docker build`:**
 
 Consulte [`Dockerfile.exemplo`](Dockerfile.exemplo), que utiliza uma etapa de segurança ANTES de copiar código-fonte. O trecho principal é:

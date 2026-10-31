@@ -1,5 +1,5 @@
 # =============================================================================
-# .gitignore | Git + Docker Security Baseline v4 (proposta para revisao)
+# .gitignore | Git + Docker Security Baseline v1.0.0
 # Proposito: evitar versionamento acidental de arquivos locais sensiveis.
 # Nao protege arquivos ja rastreados e nao impede git add -f.
 # Regras de build especificas devem ser habilitadas por projeto.

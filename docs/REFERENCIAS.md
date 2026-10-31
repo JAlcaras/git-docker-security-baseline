@@ -8,6 +8,10 @@ As fontes abaixo fundamentam **o problema de segurança e as boas práticas**. O
 2. Basak, S. K.; Neil, L.; Reaves, B.; Williams, L. **What are the Practices for Secret Management in Software Artifacts?** IEEE Secure Development Conference (SecDev), 2022. DOI: https://doi.org/10.1109/SecDev53368.2022.00026 ; texto integral: https://arxiv.org/abs/2208.11280
 3. Dahlmanns, M. et al. **Secrets Revealed in Container Images: An Internet-wide Study on Occurrence and Impact.** ACM Asia Conference on Computer and Communications Security (ASIA CCS), 2023. DOI: https://doi.org/10.1145/3579856.3590329
 
+## Frameworks e normas
+
+- Souppaya, M.; Scarfone, K.; Dodson, D. **Secure Software Development Framework (SSDF) Version 1.1: Recommendations for Mitigating the Risk of Software Vulnerabilities.** NIST Special Publication 800-218, 2022. DOI: https://doi.org/10.6028/NIST.SP.800-218 ; página oficial: https://csrc.nist.gov/pubs/sp/800/218/final
+
 ## Documentação oficial
 
 - Git: `.gitignore` https://git-scm.com/docs/gitignore

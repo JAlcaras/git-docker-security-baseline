@@ -1,5 +1,5 @@
 # =============================================================================
-# .dockerignore | Git + Docker Security Baseline v4 (proposta para revisao)
+# .dockerignore | Git + Docker Security Baseline v1.0.0
 # Filtra o CONTEXTO de build. Nao inspeciona camadas da imagem final.
 # A ultima regra correspondente prevalece (sintaxe diferente do Git).
 # Raiz = raiz do contexto usado no comando docker build.
